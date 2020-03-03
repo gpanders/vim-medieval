@@ -23,7 +23,7 @@ function! medieval#eval(bang, ...)
     if v:register != '' && v:register != '"'
         let target = '@' . v:register
     else
-        let target = get(matchlist(getline(start - 1), '^\s*<!--\s*target:\s*\(\w\+\)\s*-->'), 1, '')
+        let target = get(matchlist(getline(start - 1), '^\s*<!--\s*target:\s*\([0-9A-Za-z_+.$#&-]\+\)\s*-->'), 1, '')
     endif
 
     if g:medieval_langs[langidx] !=# lang
