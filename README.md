@@ -27,12 +27,12 @@ block with a "name" parameter. The output of the evaluation of your code block
 will be redirected to the targeted block. For example:
 
 ````markdown
-<!-- target: python -->
+<!-- target: squares -->
 ```python
 print([x*x for x in range(5)])
 ```
 
-<!-- name: pypath -->
+<!-- name: squares -->
 ```
 ```
 ````
@@ -40,7 +40,7 @@ print([x*x for x in range(5)])
 If you run `:EvalBlock` in the first code block, the second block will become
 
 ````markdown
-<!-- name: pypath -->
+<!-- name: squares -->
 ```
 [0, 1, 4, 9, 16]
 ```
@@ -91,7 +91,7 @@ yourself by adding the following to the file
 `~/.vim/after/ftplugin/markdown.vim` (create it if it does not yet exist):
 
 ```vim
-nnoremap Z! :<C-U>EvalBlock<CR>
+nnoremap <buffer> Z! :<C-U>EvalBlock<CR>
 ```
 
 ## Limitations
