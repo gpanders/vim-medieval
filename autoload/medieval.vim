@@ -34,6 +34,7 @@ function! medieval#eval(bang, ...)
     let tmp = tempname()
     call writefile(block, tmp)
     let output = systemlist(lang . ' ' . tmp)
+    call delete(tmp)
 
     let target = a:bang ? 'self' : a:0 ? a:1 : target
     if target != ''
