@@ -20,7 +20,7 @@ function! medieval#eval(bang, ...)
         return
     endif
 
-    if v:register != '"'
+    if v:register != '' && v:register != '"'
         let target = '@' . v:register
     else
         let target = get(matchlist(getline(start - 1), '^\s*<!--\s*target:\s*\(\w\+\)\s*-->'), 1, '')
