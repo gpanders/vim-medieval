@@ -46,7 +46,7 @@ function! medieval#eval(bang, ...)
             let l = search('^\s*<!--\s*name:\s*' . target . '\s*-->\s*$\n^\s*[`~]\{3,}', 'nw')
             if l
                 call cursor(l + 1, 1)
-                let [fence] = matchlist(getline(l + 1), '^\s*\([`~]\{3,}\)')[1]
+                let fence = matchlist(getline(l + 1), '^\s*\([`~]\{3,}\)')[1]
                 let end = search('^\s*' . fence . '\s*$', 'nW')
                 if end
                     call deletebufline('%', l + 2, end - 1)
