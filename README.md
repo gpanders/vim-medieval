@@ -68,6 +68,36 @@ understand well enough to explain to a computer.  Art is everything else.
 ```
 ````
 
+The block labels must be of the form `<!-- target: <NAME>` or `<!-- name:
+<NAME>`. The label can be preceeded by whitespace, but no other characters. The
+label itself can be composed of the following characters: `0-9A-Za-z_+.$#&-`.
+Note that the closing tag of the HTML comment is not required. This allows you
+to embed block labels within block comments so that the block will not be
+rendered in the final output. For example:
+
+````markdown
+<!--
+<!-- target: example
+```sh
+echo '$ ls -1'
+ls -1
+```
+-->
+
+<!-- name: example -->
+```sh
+$ ls -1
+LICENSE
+README.md
+after
+autoload
+doc
+```
+````
+
+In this example, only the output block will be rendered, since the "source"
+block is nested within an HTML comment.
+
 ## Configuration
 
 Medieval will only attempt to execute code blocks in languages explicitly

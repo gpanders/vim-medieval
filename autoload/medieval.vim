@@ -23,7 +23,7 @@ function! medieval#eval(bang, ...)
     if v:register != '' && v:register != '"'
         let target = '@' . v:register
     else
-        let target = get(matchlist(getline(start - 1), '^\s*<!--\s*target:\s*\([0-9A-Za-z_+.$#&-]\+\)\s*-->'), 1, '')
+        let target = get(matchlist(getline(start - 1), '^\s*<!--\s*target:\s*\([0-9A-Za-z_+.$#&-]\+\)'), 1, '')
     endif
 
     if g:medieval_langs[langidx] !=# lang
@@ -44,7 +44,7 @@ function! medieval#eval(bang, ...)
         elseif target =~# '^@'
             call setreg(target[1], output)
         else
-            let l = search('^\s*<!--\s*name:\s*' . target . '\s*-->\s*$\n^\s*[`~]\{3,}', 'nw')
+            let l = search('^\s*<!--\s*name:\s*' . target . '\%(\s*\|\s\+.*\)$\n^\s*[`~]\{3,}', 'nw')
             if l
                 call cursor(l + 1, 1)
                 let fence = matchlist(getline(l + 1), '^\s*\([`~]\{3,}\)')[1]
