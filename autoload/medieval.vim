@@ -20,14 +20,14 @@ function! medieval#eval(bang, ...)
         return
     endif
 
-    if v:register != '' && v:register != '"'
+    if v:register !=# '' && v:register !=# '"'
         let target = '@' . v:register
     else
         let target = get(matchlist(getline(start - 1), '^\s*<!--\s*target:\s*\([0-9A-Za-z_+.$#&-]\+\)'), 1, '')
     endif
 
-    if g:medieval_langs[langidx] !=# lang
-        let lang = split(g:medieval_langs[langidx], '=')[1]
+    if g:medieval_langs[langidx] =~# '='
+        let lang = split(g:medieval_langs[langidx], '=')[-1]
     endif
 
     let block = getline(start + 1, end - 1)
@@ -37,7 +37,7 @@ function! medieval#eval(bang, ...)
     call delete(tmp)
 
     let target = a:bang ? 'self' : a:0 ? a:1 : target
-    if target != ''
+    if target !=# ''
         if target ==# 'self'
             call deletebufline('%', start + 1, end - 1)
             call append(start, output)
