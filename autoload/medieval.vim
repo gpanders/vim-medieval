@@ -30,6 +30,14 @@ function! medieval#eval(bang, ...)
         let lang = split(g:medieval_langs[langidx], '=')[-1]
     endif
 
+    if !executable(lang)
+        echohl ErrorMsg
+        echom 'medieval: Command not found: ' . lang
+        echohl None
+        call winrestview(view)
+        return
+    endif
+
     let block = getline(start + 1, end - 1)
     let tmp = tempname()
     call writefile(block, tmp)
