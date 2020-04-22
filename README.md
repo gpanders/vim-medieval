@@ -68,6 +68,20 @@ understand well enough to explain to a computer.  Art is everything else.
 ```
 ````
 
+The target block can be either another code block (delimited by `` ``` `` or
+`~~~`) or a LaTeX math block (delimited by `$$`):
+
+````markdown
+<!-- target: math -->
+```python
+print("\\text{Hello LaTeX!}")
+```
+
+<!-- name: math -->
+$$
+$$
+````
+
 The block labels must be of the form `<!-- target: <NAME>` or `<!-- name:
 <NAME>`. The label can be preceeded by whitespace, but no other characters. The
 label itself can be composed of the following characters: `0-9A-Za-z_+.$#&-`.

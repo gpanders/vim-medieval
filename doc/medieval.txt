@@ -26,18 +26,18 @@ by adding a "target" parameter to your code block and creating a second code
 block with a "name" parameter. The output of the evaluation of your code block
 will be redirected to the targeted block. For example:
 >
-	<!-- target: python -->
+	<!-- target: squares -->
 	```python
 	print([x*x for x in range(5)])
 	```
 
-	<!-- name: pypath -->
+	<!-- name: squares -->
 	```
 	```
 <
 If you run |:EvalBlock| in the first code block, the second block will become
 >
-	<!-- name: pypath -->
+	<!-- name: squares -->
 	```
 	[0, 1, 4, 9, 16]
 	```
@@ -58,7 +58,18 @@ After |:EvalBlock!|:
 	                -- Donald Knuth, "Discover"
 	```
 <
+The target block can be either another code block (delimited by ``` or ~~~) or
+a LaTeX math block (delimited by $$):
+>
+	<!-- target: math -->
+	```python
+	print("\\text{Hello LaTeX!}")
+	```
 
+	<!-- name: math -->
+	$$
+	$$
+<
 							*g:medieval_langs*
 Medieval will only attempt to execute code blocks in languages explicitly
 listed in the variable |g:medieval_langs|. The structure of this variable is a
