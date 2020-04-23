@@ -63,7 +63,7 @@ a LaTeX math block (delimited by $$):
 >
 	<!-- target: math -->
 	```python
-	print("\\text{Hello LaTeX!}")
+	print(r"\text{Hello LaTeX!}")
 	```
 
 	<!-- name: math -->

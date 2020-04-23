@@ -74,7 +74,7 @@ The target block can be either another code block (delimited by `` ``` `` or
 ````markdown
 <!-- target: math -->
 ```python
-print("\\text{Hello LaTeX!}")
+print(r"\text{Hello LaTeX!}")
 ```
 
 <!-- name: math -->
