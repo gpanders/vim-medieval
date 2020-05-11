@@ -79,6 +79,7 @@ print(r"\text{Hello LaTeX!}")
 
 <!-- name: math -->
 $$
+\text{Hello LaTeX!}
 $$
 ````
 
@@ -86,11 +87,10 @@ The block labels must be of the form `<!-- target: <NAME>` or `<!-- name:
 <NAME>`. The label can be preceeded by whitespace, but no other characters. The
 label itself can be composed of the following characters: `0-9A-Za-z_+.$#&-`.
 Note that the closing tag of the HTML comment is not required. This allows you
-to embed block labels within block comments so that the block will not be
-rendered in the final output. For example:
+to embed the code block within an HTML block comment so that the block will not
+be rendered in the final output. For example:
 
 ````markdown
-<!--
 <!-- target: example
 ```sh
 echo '$ ls -1'
