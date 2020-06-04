@@ -1,3 +1,29 @@
+let s:fences = [{'start': '[`~]\{3,}'}, {'start': '\$\$'}]
+
+" Generate search pattern to match the start of any valid fence
+function! s:fencepat(fences)
+    return join(map(copy(a:fences), 'v:val.start'), '\|')
+endfunction
+
+" Search for a target code block with the given name
+function! s:search(target, fences)
+    let pat = '^\s*<!--\s*name:\s*' . a:target
+
+    " Trailing characters allowed, e.g. a closing comment tag: '-->'
+    let pat .= '\%(\s*\|\s\+.*\)$\n'
+
+    " Search start of following line for opening delimiter of a code fence
+    let pat .= '^\s*\%(' . s:fencepat(a:fences) . '\)'
+
+    return search(pat, 'nw')
+endfunction
+
+function! s:error(msg)
+    echohl ErrorMsg
+    echom 'medieval: ' . a:msg
+    echohl None
+endfunction
+
 function! medieval#eval(bang, ...)
     if !exists('g:medieval_langs')
         return
@@ -31,11 +57,8 @@ function! medieval#eval(bang, ...)
     endif
 
     if !executable(lang)
-        echohl ErrorMsg
-        echom 'medieval: Command not found: ' . lang
-        echohl None
         call winrestview(view)
-        return
+        return s:error('Command not found: ' . lang)
     endif
 
     let block = getline(start + 1, end - 1)
@@ -52,15 +75,34 @@ function! medieval#eval(bang, ...)
         elseif target =~# '^@'
             call setreg(target[1], output)
         else
-            let l = search('^\s*<!--\s*name:\s*' . target . '\%(\s*\|\s\+.*\)$\n^\s*\%([`~]\{3,}\|\$\$\)', 'nw')
+            let fences = extend(s:fences, get(g:, 'medieval_fences', []))
+            let l = s:search(target, fences)
             if l
                 call cursor(l + 1, 1)
-                let fence = matchlist(getline('.'), '^\s*\([`~]\{3,}\|\$\$\)')[1]
-                let end = search('^\s*' . fence . '\s*$', 'nW')
-                if end
-                    call deletebufline('%', l + 2, end - 1)
-                    call append(l + 1, output)
+                let start = matchlist(getline('.'), '^\s*\(' . s:fencepat(fences) . '\)')
+
+                let endpat = ''
+                for fence in fences
+                    if start[1] =~# fence.start
+                        " If 'end' pattern is not defined, copy the opening
+                        " delimiter
+                        let endpat = get(fence, 'end', start[1])
+
+                        " Replace any instances of \0, \1, \2, ... with the
+                        " submatch from the opening delimiter
+                        let endpat = substitute(endpat, '\\\(\d\)', '\=start[1 + submatch(1)]', 'g')
+                        break
+                    endif
+                endfor
+
+                let end = search('^\s*' . endpat . '\s*$', 'nW')
+                if !end
+                    call winrestview(view)
+                    return s:error('No closing fence delimiter found!')
                 endif
+
+                call deletebufline('%', l + 2, end - 1)
+                call append(l + 1, output)
             endif
         endif
     else

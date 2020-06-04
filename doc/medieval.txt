@@ -85,4 +85,30 @@ For example, to allow Medieval to run Python, Ruby, and shell scripts, use
 By default, |g:medieval_langs| is empty, so you must specify this variable
 yourself.
 
+							*g:medieval_fences*
+You can define custom code fence delimiters using the variable
+|g:medieval_fences|. This variable is a |List| of |Dict|s containing a "start"
+key that defines a pattern for the opening delimiter of the code block and an
+optional "end" key that defines a pattern for the closing delimiter of the
+code block. If "end" is omitted, then the closing delimiter is assumed to be
+the same as the opening delimiter.
+
+For example, to use a block of the following form:
+>
+	<!-- name: katex -->
+	{{< katex >}}
+	{{< /katex >}}
+<
+You can set |g:medieval_fences| to
+>
+	let g:medieval_fences = [{
+		\ 'start': '{{<\s\+\(\S\+\)\s\+>}}',
+		\ 'end': '{{<\s\+/\1\s\+>}}',
+		\ }]
+<
+Note the use of a capture group in the "start" pattern and the use of "\1" in
+the end pattern. The "\1" in the end pattern will be replaced by whatever
+matches the capture group in the "start" pattern ("katex" in our example
+above).
+
  vim:tw=78:ts=8:noet:ft=help:norl:

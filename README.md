@@ -130,6 +130,35 @@ let g:medieval_langs = ['python=python3', 'ruby', 'sh', 'console=bash']
 By default, `g:medieval_langs` is empty, so you **must** specify this variable
 yourself.
 
+You can also define custom code fence delimiters using the variable
+`g:medieval_fences`. This variable is a List of Dicts containing a `start` key
+that defines a pattern for the opening delimiter of the code block and an
+optional `end` key that defines a pattern for the closing delimiter of the code
+block. If `end` is omitted, then the closing delimiter is assumed to be the
+same as the opening delimiter.
+
+For example, a [Hugo shortcode][shortcodes] has the following form:
+
+```markdown
+{{< katex >}}
+Some content here
+{{< /katex >}}
+```
+
+You can use Medieval with blocks like this by setting `g:medieval_fences` to
+the following:
+
+```vim
+let g:medieval_fences = [{'start': '{{<\s\+\(\S\+\)\s\+>}}', 'end': '{{<\s\+/\1\s\+>}}'}]
+```
+
+Note the use of a capture group in the `start` pattern and the use of `\1` in
+the end pattern. In this example, the `\1` in the end pattern will be replaced
+by whatever matches the capture group in the `start` pattern (`katex` in our
+example above).
+
+[shortcodes]: https://gohugo.io/content-management/shortcodes/
+
 ## Create a mapping
 
 Medieval does not create any mappings by default, but you can easily create one
