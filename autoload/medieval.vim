@@ -1,7 +1,7 @@
 let s:tempfile = fnamemodify(tempname(), ':h') . '/medieval'
 let s:fences = [{'start': '[`~]\{3,}'}, {'start': '\$\$'}]
 
-augroup medeival
+augroup medieval
     autocmd!
     autocmd VimLeave * call delete(s:tempfile)
 augroup END
