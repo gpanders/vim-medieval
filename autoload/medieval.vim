@@ -64,12 +64,12 @@ function! s:callback(context, output)
     let target = a:context.target
     let start = a:context.start
     let end = a:context.end
-    let view = a:context.view
 
     if empty(a:output)
-        call winrestview(view)
         return
     endif
+
+    let view = winsaveview()
 
     if target !=# ''
         if target ==# 'self'
@@ -165,7 +165,8 @@ function! medieval#eval(bang, ...)
                 \ 'start': start,
                 \ 'end': end,
                 \ 'tempfile': tmp,
-                \ 'view': view
                 \ }
+
     call s:jobstart([lang, tmp], function('s:callback', [context]))
+    call winrestview(view)
 endfunction
