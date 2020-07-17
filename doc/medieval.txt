@@ -13,9 +13,9 @@ following form:
 	echo "Hello world!"
 	```
 <
-By placing your cursor anywhere in the code block above and running
-:EvalBlock, Medieval will print the result of evaluating the block (in this
-case, it will echo "Hello world!")
+By placing your cursor anywhere in the code block above and running :EvalBlock,
+Medieval will open the result of evaluating the block in the |preview-window|
+(in this case, it will contain the text "Hello world!")
 
 You can also redirect the output of the evaluation into a register using
 |:EvalBlock| @{0-9a-z".=*+}.
