@@ -1,4 +1,10 @@
+let s:tempfile = fnamemodify(tempname(), ':h') . '/medieval'
 let s:fences = [{'start': '[`~]\{3,}'}, {'start': '\$\$'}]
+
+augroup medeival
+    autocmd!
+    autocmd VimLeave * call delete(s:tempfile)
+augroup END
 
 " Generate search pattern to match the start of any valid fence
 function! s:fencepat(fences)
@@ -106,7 +112,8 @@ function! medieval#eval(bang, ...)
             endif
         endif
     else
-        echo join(output, "\n")
+        call writefile(output, s:tempfile)
+        exec 'pedit ' . s:tempfile
     endif
 
     call winrestview(view)
