@@ -124,14 +124,14 @@ function! medieval#eval(bang, ...)
 
     let view = winsaveview()
     let line = line('.')
-    let start = search('^\s*[`~]\{3,}\s*\%({\.\)\?\a\+', 'bnW')
+    let start = search('^\s*[`~]\{3,}\s*\%({\.\)\?{\?\a\+,\?.*}\?', 'bnW')
     if !start
         return
     endif
 
     call cursor(start, 1)
     let [fence, lang] = matchlist(getline(start),
-                \ '^\s*\([`~]\{3,}\)\s*\%({\.\)\?\(\a\+\)\?')[1:2]
+                \ '^\s*\([`~]\{3,}\)\s*\%({\.\)\?{\?\(\a\+\)\?,\?.*}\?')[1:2]
     let end = search('^\s*' . fence . '\s*$', 'nW')
     let langidx = index(map(copy(g:medieval_langs), 'split(v:val, "=")[0]'), lang)
 
