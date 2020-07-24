@@ -68,6 +68,33 @@ understand well enough to explain to a computer.  Art is everything else.
 ```
 ````
 
+The language of the block being executed is detected through the text next to
+the opening code fence (known as the "info string"). There is no formal
+specification for how the info string should be formatted; however, Medieval
+can detect info strings in any of the following formats:
+
+````markdown
+```lang
+```
+
+```{.lang}
+```
+
+```{lang}
+```
+````
+
+Whitespace is allowed before the info string. The closing `}` is not required
+for the latter two styles, meaning you can use info strings such as
+
+````markdown
+``` {.python .numberLines #my-id}
+```
+````
+
+Note, however, that when using this kind of info string the language name must
+be first for Medieval to correctly detect it.
+
 The target block can be either another code block (delimited by `` ``` `` or
 `~~~`) or a LaTeX math block (delimited by `$$`):
 
