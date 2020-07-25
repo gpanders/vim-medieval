@@ -6,6 +6,16 @@ augroup medieval
     autocmd VimLeave * call delete(s:tempfile)
 augroup END
 
+function! s:error(msg) abort
+    if empty(a:msg)
+        return
+    endif
+
+    echohl ErrorMsg
+    echom 'medieval: ' . a:msg
+    echohl None
+endfunction
+
 " Generate search pattern to match the start of any valid fence
 function! s:fencepat(fences) abort
     return join(map(copy(a:fences), 'v:val.start'), '\|')
@@ -48,27 +58,16 @@ function! s:jobstart(cmd, cb) abort
     endif
 endfunction
 
-function! s:error(msg) abort
-    if empty(a:msg)
-        return
-    endif
-
-    echohl ErrorMsg
-    echom 'medieval: ' . a:msg
-    echohl None
-endfunction
-
 function! s:callback(context, output) abort
     call delete(a:context.tempfile)
-
-    let target = a:context.target
-    let start = a:context.start
-    let end = a:context.end
 
     if empty(a:output)
         return
     endif
 
+    let target = a:context.target
+    let start = a:context.start
+    let end = a:context.end
     let view = winsaveview()
 
     if target !=# ''
@@ -82,33 +81,34 @@ function! s:callback(context, output) abort
             let l = s:search(target, fences)
             if l
                 call cursor(l + 1, 1)
-                let start = matchlist(getline('.'), '^\s*\(' . s:fencepat(fences) . '\)')
+                let tstart = matchlist(getline('.'), '^\s*\(' . s:fencepat(fences) . '\)')
 
                 let endpat = ''
                 for fence in fences
-                    if start[1] =~# fence.start
+                    if tstart[1] =~# fence.start
                         " If 'end' pattern is not defined, copy the opening
                         " delimiter
-                        let endpat = get(fence, 'end', start[1])
+                        let endpat = get(fence, 'end', tstart[1])
 
                         " Replace any instances of \0, \1, \2, ... with the
                         " submatch from the opening delimiter
-                        let endpat = substitute(endpat, '\\\(\d\)', '\=start[1 + submatch(1)]', 'g')
+                        let endpat = substitute(endpat, '\\\(\d\)', '\=tstart[1 + submatch(1)]', 'g')
                         break
                     endif
                 endfor
 
-                let end = search('^\s*' . endpat . '\s*$', 'nW')
-                if !end
+                let tend = search('^\s*' . endpat . '\s*$', 'nW')
+                if !tend
                     call winrestview(view)
-                    return s:error('No closing fence delimiter found!')
+                    return s:error('Closing fence not found for target block')
                 endif
 
-                call deletebufline('%', l + 2, end - 1)
+                call deletebufline('%', l + 2, tend - 1)
                 call append(l + 1, a:output)
             endif
         endif
     else
+        " Open result in preview window
         call writefile(a:output, s:tempfile)
         exec 'pedit ' . s:tempfile
     endif
@@ -133,10 +133,15 @@ function! medieval#eval(bang, ...) abort
     let [fence, lang] = matchlist(getline(start),
                 \ '^\s*\([`~]\{3,}\)\s*\%({\s*\.\?\)\?\(\a\+\)\?')[1:2]
     let end = search('^\s*' . fence . '\s*$', 'nW')
-    let langidx = index(map(copy(g:medieval_langs), 'split(v:val, "=")[0]'), lang)
-
-    if end < line || langidx < 0
+    if end < line
         call winrestview(view)
+        return s:error('Closing fence not found')
+    endif
+
+    let langidx = index(map(copy(g:medieval_langs), 'split(v:val, "=")[0]'), lang)
+    if langidx < 0
+        call winrestview(view)
+        echo '''' . lang . ''' not found in g:medieval_langs'
         return
     endif
 
