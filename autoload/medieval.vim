@@ -7,12 +7,12 @@ augroup medieval
 augroup END
 
 " Generate search pattern to match the start of any valid fence
-function! s:fencepat(fences)
+function! s:fencepat(fences) abort
     return join(map(copy(a:fences), 'v:val.start'), '\|')
 endfunction
 
 " Search for a target code block with the given name
-function! s:search(target, fences)
+function! s:search(target, fences) abort
     let pat = '^\s*<!--\s*name:\s*' . a:target
 
     " Trailing characters allowed, e.g. a closing comment tag: '-->'
@@ -25,7 +25,7 @@ function! s:search(target, fences)
 endfunction
 
 " Wrapper around job start functions for both neovim and vim
-function! s:jobstart(cmd, cb)
+function! s:jobstart(cmd, cb) abort
     let output = []
     if exists('*jobstart')
         call jobstart(a:cmd, {
@@ -48,7 +48,7 @@ function! s:jobstart(cmd, cb)
     endif
 endfunction
 
-function! s:error(msg)
+function! s:error(msg) abort
     if empty(a:msg)
         return
     endif
@@ -58,7 +58,7 @@ function! s:error(msg)
     echohl None
 endfunction
 
-function! s:callback(context, output)
+function! s:callback(context, output) abort
     call delete(a:context.tempfile)
 
     let target = a:context.target
@@ -116,7 +116,7 @@ function! s:callback(context, output)
     call winrestview(view)
 endfunction
 
-function! medieval#eval(bang, ...)
+function! medieval#eval(bang, ...) abort
     if !exists('g:medieval_langs')
         call s:error('g:medieval_langs is unset')
         return
