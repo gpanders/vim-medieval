@@ -113,7 +113,6 @@ function! s:callback(context, output) abort
         call deletebufline('%', '$')
         exec 'resize' &previewheight
         setlocal buftype=nofile bufhidden=delete nobuflisted noswapfile winfixheight
-        nnoremap <buffer> q <C-W>q
         wincmd p
     endif
 
