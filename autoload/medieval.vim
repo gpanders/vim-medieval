@@ -1,4 +1,3 @@
-let s:tempfile = fnamemodify(tempname(), ':h') . '/medieval'
 let s:fences = [{'start': '[`~]\{3,}'}, {'start': '\$\$'}]
 
 function! s:error(msg) abort
@@ -103,9 +102,19 @@ function! s:callback(context, output) abort
             endif
         endif
     else
-        " Open result in preview window
-        call writefile(a:output, s:tempfile)
-        exec 'pedit ' . s:tempfile
+        " Open result in scratch buffer
+        if &splitbelow
+            botright new
+        else
+            topleft new
+        endif
+
+        call append(0, a:output)
+        call deletebufline('%', '$')
+        exec 'resize' &previewheight
+        setlocal buftype=nofile bufhidden=delete nobuflisted noswapfile winfixheight
+        nnoremap <buffer> q <C-W>q
+        wincmd p
     endif
 
     call winrestview(view)
