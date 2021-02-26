@@ -1,4 +1,6 @@
 let s:fences = [{'start': '[`~]\{3,}'}, {'start': '\$\$'}]
+let s:opts = ['name', 'target', 'require']
+let s:optspat = '\(' . join(s:opts, '\|') . '\):\s*\([0-9A-Za-z_+.$#&-]\+\)'
 
 function! s:error(msg) abort
     if empty(a:msg)
@@ -33,17 +35,56 @@ function! s:fencepat(fences) abort
     return join(map(copy(a:fences), 'v:val.start'), '\|')
 endfunction
 
-" Search for a target code block with the given name
-function! s:search(target, fences) abort
-    let pat = '^\s*<!--\s*name:\s*' . a:target
+" Find a code block with the given name and return the start and end lines.
+" For example, s:findblock('foo') will find the following block:
+"
+"     <!-- name: foo -->
+"     ```
+"     ```
+function! s:findblock(name) abort
+    let fences = extend(s:fences, get(g:, 'medieval_fences', []))
+    let fencepat = s:fencepat(fences)
 
-    " Trailing characters allowed, e.g. a closing comment tag: '-->'
-    let pat .= '\%(\s*\|\s\+.*\)$\n'
+    let curpos = getcurpos()[1:]
 
-    " Search start of following line for opening delimiter of a code fence
-    let pat .= '^\s*\%(' . s:fencepat(a:fences) . '\)'
+    call cursor(1, 1)
 
-    return search(pat, 'nw')
+    while 1
+        if !search('^\s*<!--\s*' . s:optspat, 'W')
+            call cursor(curpos)
+            return [0, 0]
+        endif
+
+        if getline('.') =~# '\<name:\s*' . a:name
+            let start = line('.')
+            if getline(start + 1) =~# '^\s*\%(' . fencepat . '\)'
+                break
+            endif
+        endif
+    endwhile
+
+    call cursor(start + 1, 1)
+    let tstart = matchlist(getline('.'), '^\s*\(' . fencepat . '\)')
+
+    let endpat = ''
+    for fence in fences
+        if tstart[1] =~# fence.start
+            " If 'end' pattern is not defined, copy the opening
+            " delimiter
+            let endpat = get(fence, 'end', tstart[1])
+
+            " Replace any instances of \0, \1, \2, ... with the
+            " submatch from the opening delimiter
+            let endpat = substitute(endpat, '\\\(\d\)', '\=tstart[1 + submatch(1)]', 'g')
+            break
+        endif
+    endfor
+
+    let end = search('^\s*' . endpat . '\s*$', 'nW')
+
+    call cursor(curpos)
+
+    return [start, end]
 endfunction
 
 " Wrapper around job start functions for both neovim and vim
@@ -70,6 +111,41 @@ function! s:jobstart(cmd, cb) abort
     endif
 endfunction
 
+" Parse an options string on the given line number
+function! s:parseopts(lnum) abort
+    let opts = {}
+    let line = getline(a:lnum)
+    if line =~# '^\s*<!--\s*' . s:optspat
+        let cnt = 0
+        while 1
+            let matches = matchlist(line, s:optspat, 0, cnt)
+            if empty(matches)
+                break
+            endif
+            let opts[matches[1]] = matches[2]
+            let cnt += 1
+        endwhile
+    endif
+
+    return opts
+endfunction
+
+function! s:require(name) abort
+    let [start, end] = s:findblock(a:name)
+    if !end
+        return []
+    endif
+
+    let block = getline(start + 2, end - 1)
+
+    let opts = s:parseopts(start)
+    if has_key(opts, 'require')
+        return s:require(opts.require) + block
+    endif
+
+    return block
+endfunction
+
 function! s:callback(context, output) abort
     call delete(a:context.tempfile)
 
@@ -77,47 +153,26 @@ function! s:callback(context, output) abort
         return
     endif
 
-    let target = a:context.target
+    let opts = a:context.opts
     let start = a:context.start
     let end = a:context.end
     let view = winsaveview()
 
-    if target !=# ''
-        if target ==# 'self'
+    if get(opts, 'target', '') !=# ''
+        if opts.target ==# 'self'
             call deletebufline('%', start + 1, end - 1)
             call append(start, a:output)
-        elseif target =~# '^@'
-            call setreg(target[1], a:output)
+        elseif opts.target =~# '^@'
+            call setreg(opts.target[1], a:output)
         else
-            let fences = extend(s:fences, get(g:, 'medieval_fences', []))
-            let l = s:search(target, fences)
-            if l
-                call cursor(l + 1, 1)
-                let tstart = matchlist(getline('.'), '^\s*\(' . s:fencepat(fences) . '\)')
-
-                let endpat = ''
-                for fence in fences
-                    if tstart[1] =~# fence.start
-                        " If 'end' pattern is not defined, copy the opening
-                        " delimiter
-                        let endpat = get(fence, 'end', tstart[1])
-
-                        " Replace any instances of \0, \1, \2, ... with the
-                        " submatch from the opening delimiter
-                        let endpat = substitute(endpat, '\\\(\d\)', '\=tstart[1 + submatch(1)]', 'g')
-                        break
-                    endif
-                endfor
-
-                let tend = search('^\s*' . endpat . '\s*$', 'nW')
-                if !tend
-                    call winrestview(view)
-                    return s:error('Closing fence not found for target block')
-                endif
-
-                call deletebufline('%', l + 2, tend - 1)
-                call append(l + 1, a:output)
+            let [tstart, tend] = s:findblock(opts.target)
+            if !tend
+                call winrestview(view)
+                return s:error('Closing fence not found for target block')
             endif
+
+            call deletebufline('%', tstart + 2, tend - 1)
+            call append(tstart + 1, a:output)
         endif
     else
         " Open result in scratch buffer
@@ -145,14 +200,14 @@ function! medieval#eval(bang, ...) abort
 
     let view = winsaveview()
     let line = line('.')
-    let start = search('^\s*[`~]\{3,}\s*\%({\s*\.\?\)\?\a\+', 'bnW')
+    let startpat = '^\s*\([`~]\{3,}\)\s*\%({\s*\.\?\)\?\(\a\+\)\?'
+    let start = search(startpat, 'bcnW')
     if !start
         return
     endif
 
     call cursor(start, 1)
-    let [fence, lang] = matchlist(getline(start),
-                \ '^\s*\([`~]\{3,}\)\s*\%({\s*\.\?\)\?\(\a\+\)\?')[1:2]
+    let [fence, lang] = matchlist(getline(start), startpat)[1:2]
     let end = search('^\s*' . fence . '\s*$', 'nW')
     if end < line
         call winrestview(view)
@@ -166,11 +221,14 @@ function! medieval#eval(bang, ...) abort
         return
     endif
 
-    if s:validreg(v:register)
-        let target = '@' . v:register
-    else
-        let target = get(matchlist(getline(start - 1),
-                    \ '^\s*<!--\s*target:\s*\([0-9A-Za-z_+.$#&-]\+\)'), 1, '')
+    let opts = s:parseopts(start - 1)
+
+    if a:bang
+        let opts.target = 'self'
+    elseif a:0
+        let opts.target = a:1
+    elseif s:validreg(v:register)
+        let opts.target = '@' . v:register
     endif
 
     if g:medieval_langs[langidx] =~# '='
@@ -182,17 +240,14 @@ function! medieval#eval(bang, ...) abort
         return s:error('Command not found: ' . lang)
     endif
 
-    let block = getline(start + 1, end - 1)
     let tmp = tempname()
+    let block = getline(start + 1, end - 1)
+    if has_key(opts, 'require')
+        let block = s:require(opts.require) + block
+    endif
     call writefile(block, tmp)
 
-    let context = {
-                \ 'target': a:bang ? 'self' : a:0 ? a:1 : target,
-                \ 'start': start,
-                \ 'end': end,
-                \ 'tempfile': tmp,
-                \ }
-
+    let context = {'opts': opts, 'start': start, 'end': end, 'tempfile': tmp}
     call s:jobstart([lang, tmp], function('s:callback', [context]))
     call winrestview(view)
 endfunction

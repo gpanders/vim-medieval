@@ -14,7 +14,7 @@ following form:
 	```
 <
 By placing your cursor anywhere in the code block above and running
-:EvalBlock, Medieval will open the result of evaluating the block in the
+|:EvalBlock|, Medieval will open the result of evaluating the block in the
 |preview-window| (in this case, it will contain the text "Hello world!")
 
 You can also redirect the output of the evaluation into a register using
@@ -93,6 +93,93 @@ The target block can be either another code block (delimited by "```" or
 	$$
 	$$
 <
+							*medieval-labels*
+
+The block labels must be of the form "<!-- {option}: {value}[,] [{option}:
+{value}[,] [...]]" where {option} is one of "name", "target", or "require".
+The label can be preceeded by whitespace, but no other characters. The option
+values can be composed of the following characters: "0-9A-Za-z_+.$#&-". Note
+that the closing tag of the HTML comment is not required. This allows you to
+embed the code block within an HTML block comment so that the block will not
+be rendered in the final output. For example:
+>
+	<!-- target: example
+	```sh
+	echo '$ ls -1'
+	ls -1
+	```
+	-->
+
+	<!-- name: example -->
+	```sh
+	$ ls -1
+	LICENSE
+	README.md
+	after
+	autoload
+	doc
+	```
+<
+In this example, only the second block will be rendered, since the first block
+is nested within an HTML comment.
+
+							*medieval-require*
+
+Code blocks can be combined using the "require" option. The argument to the
+"require" option is the name of another code block which will be evaluated
+before the contents of the block itself. Required blocks must use the same
+language as the requiring block.
+
+For example,
+>
+	<!-- name: numpy -->
+	```python
+	import numpy as np
+	```
+
+	<!-- target: output, require: numpy -->
+	```python
+	print(np.arange(1, 5))
+	```
+
+	<!-- name: output -->
+	```
+	```
+<
+Running |:EvalBlock| in the second code block produces:
+>
+	<!-- name: output -->
+	```
+	[1 2 3 4]
+	```
+	````
+
+	Blocks can have recursive dependencies:
+
+	````markdown
+	<!-- name: first_name -->
+	```sh
+	first_name="Gregory"
+	```
+
+	<!-- name: full_name, require: first_name -->
+	```sh
+	full_name="$first_name Anders"
+	```
+
+	<!-- target: greeting, require: full_name -->
+	```sh
+	echo "Hi, my name is $full_name"
+	```
+
+	After running :EvalBlock in the block above...
+
+	<!-- name: greeting -->
+	```
+	Hi, my name is Gregory Anders
+	```
+<
+
 							*g:medieval_langs*
 Medieval will only attempt to execute code blocks in languages explicitly
 listed in the variable |g:medieval_langs|. The structure of this variable is a
