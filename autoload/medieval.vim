@@ -10,6 +10,24 @@ function! s:error(msg) abort
     echohl None
 endfunction
 
+" Check the v:register variable for a valid value to see if the user wants to
+" copy output to a register
+function! s:validreg(reg) abort
+    if a:reg ==# ''
+        return v:false
+    endif
+
+    if a:reg ==# '"'
+        return v:false
+    endif
+
+    if &clipboard =~# '^unnamed' && (a:reg ==# '*' || a:reg ==# '+')
+        return v:false
+    endif
+
+    return v:true
+endfunction
+
 " Generate search pattern to match the start of any valid fence
 function! s:fencepat(fences) abort
     return join(map(copy(a:fences), 'v:val.start'), '\|')
@@ -148,7 +166,7 @@ function! medieval#eval(bang, ...) abort
         return
     endif
 
-    if v:register !=# '' && v:register !=# '"'
+    if s:validreg(v:register)
         let target = '@' . v:register
     else
         let target = get(matchlist(getline(start - 1),
