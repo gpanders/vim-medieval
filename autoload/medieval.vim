@@ -50,7 +50,7 @@ function! s:findblock(name) abort
     call cursor(1, 1)
 
     while 1
-        if !search('^\s*<!--\s*' . s:optspat, 'W')
+        if !search('^\s*<!--\s*' . s:optspat, 'cW')
             call cursor(curpos)
             return [0, 0]
         endif
@@ -61,6 +61,9 @@ function! s:findblock(name) abort
                 break
             endif
         endif
+
+        " Move the cursor so that we don't match on the current line again
+        call cursor(line('.') + 1, 1)
     endwhile
 
     call cursor(start + 1, 1)
