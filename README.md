@@ -110,12 +110,13 @@ $$
 $$
 ````
 
-The block labels must be of the form `<!-- target: <NAME>` or `<!-- name:
-<NAME>`. The label can be preceeded by whitespace, but no other characters. The
-label itself can be composed of the following characters: `0-9A-Za-z_+.$#&-`.
-Note that the closing tag of the HTML comment is not required. This allows you
-to embed the code block within an HTML block comment so that the block will not
-be rendered in the final output. For example:
+The block labels must be of the form `<!-- OPTION: VALUE[,] [OPTION: VALUE[,]
+[...]]` where `OPTION` is one of `name`, `target`, or `require`. The label can
+be preceeded by whitespace, but no other characters. The option values can be
+composed of the following characters: `0-9A-Za-z_+.$#&-`. Note that the closing
+tag of the HTML comment is not required. This allows you to embed the code
+block within an HTML block comment so that the block will not be rendered in
+the final output. For example:
 
 ````markdown
 <!-- target: example
@@ -136,8 +137,68 @@ doc
 ```
 ````
 
-In this example, only the output block will be rendered, since the "source"
-block is nested within an HTML comment.
+In this example, only the second block will be rendered, since the first block
+is nested within an HTML comment.
+
+## Block Dependencies
+
+Code blocks can be combined using the `require` option. The argument to the
+`require` option is the name of another code block which will be evaluated
+before the contents of the block itself. Required blocks must use the same
+language as the requiring block.
+
+For example,
+
+````markdown
+<!-- name: numpy -->
+```python
+import numpy as np
+```
+
+<!-- target: output, require: numpy -->
+```python
+print(np.arange(1, 5))
+```
+
+<!-- name: output -->
+```
+```
+````
+
+Running `:EvalBlock` in the second code block produces:
+
+````markdown
+<!-- name: output -->
+```
+[1 2 3 4]
+```
+````
+
+Blocks can have recursive dependencies:
+
+````markdown
+<!-- name: first_name -->
+```sh
+first_name="Gregory"
+```
+
+<!-- name: full_name, require: first_name -->
+```sh
+full_name="$first_name Anders"
+```
+
+<!-- target: greeting, require: full_name -->
+```sh
+echo "Hi, my name is $full_name"
+```
+
+After running :EvalBlock in the block above...
+
+<!-- name: greeting -->
+```
+Hi, my name is Gregory Anders
+```
+````
 
 ## Configuration
 
