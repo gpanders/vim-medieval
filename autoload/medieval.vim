@@ -159,7 +159,6 @@ function! s:callback(context, output) abort
     let opts = a:context.opts
     let start = a:context.start
     let end = a:context.end
-    let view = winsaveview()
 
     if get(opts, 'target', '') !=# ''
         if opts.target ==# 'self'
@@ -169,9 +168,12 @@ function! s:callback(context, output) abort
             call setreg(opts.target[1], a:output)
         else
             let [tstart, tend] = s:findblock(opts.target)
+            if !tstart
+                return s:error('Couldn''t find block "' . opts.target . '"')
+            endif
+
             if !tend
-                call winrestview(view)
-                return s:error('Closing fence not found for target block')
+                return s:error('Block "' . opts.target . '" doesn''t have a closing fence')
             endif
 
             call deletebufline('%', tstart + 2, tend - 1)
@@ -191,8 +193,6 @@ function! s:callback(context, output) abort
         setlocal buftype=nofile bufhidden=delete nobuflisted noswapfile winfixheight
         wincmd p
     endif
-
-    call winrestview(view)
 endfunction
 
 function! medieval#eval(bang, ...) abort
