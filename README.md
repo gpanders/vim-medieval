@@ -4,6 +4,15 @@ Evaluate Markdown code blocks within Vim.
 
 [![asciicast](https://asciinema.org/a/306995.svg)](https://asciinema.org/a/306995)
 
+## Table of Contents
+
+- [Description](#description)
+- [Block Dependencies](#block-dependencies)
+- [Configuration](#configuration)
+- [Create a mapping](#create-a-mapping)
+- [Limitations](#limitations)
+- [Contributing](#contributing)
+
 ## Description
 
 Medieval allows you to evaluate code blocks in Markdown buffers of the
