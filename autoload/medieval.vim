@@ -90,6 +90,10 @@ function! s:findblock(name) abort
     return [start, end]
 endfunction
 
+function! s:createblock(start, name) abort
+    call append(a:start, ['', '<!-- name: ' . a:name . ' -->', '```', '```'])
+endfunction
+
 " Wrapper around job start functions for both neovim and vim
 function! s:jobstart(cmd, cb) abort
     let output = []
@@ -169,7 +173,9 @@ function! s:callback(context, output) abort
         else
             let [tstart, tend] = s:findblock(opts.target)
             if !tstart
-                return s:error('Couldn''t find block "' . opts.target . '"')
+                call s:createblock(end, opts.target)
+                let tstart = end + 2
+                let tend = tstart + 1
             endif
 
             if !tend
