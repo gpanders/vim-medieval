@@ -210,7 +210,7 @@ function! medieval#eval(bang, ...) abort
 
     let view = winsaveview()
     let line = line('.')
-    let startpat = '^\s*\([`~]\{3,}\)\s*\%({\s*\.\?\)\?\(\a\+\)\?'
+    let startpat = '\v^\s*([`~]{3,})\s*%(\{\s*.?)?(\a+)?'
     let start = search(startpat, 'bcnW')
     if !start
         return
@@ -218,7 +218,7 @@ function! medieval#eval(bang, ...) abort
 
     call cursor(start, 1)
     let [fence, lang] = matchlist(getline(start), startpat)[1:2]
-    let end = search('^\s*' . fence . '\s*$', 'nW')
+    let end = search('\V\^\s\*' . fence . '\s\*\$', 'nW')
     if end < line
         call winrestview(view)
         return s:error('Closing fence not found')
