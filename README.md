@@ -70,11 +70,13 @@ print([x*x for x in range(5)])
 ```
 ````
 
-Note that the following would not work, as it is not possible to distinguish
-between a file named 'squares.txt' and a block named 'squares.txt':
-````markdown
+Note that the following will write to a code block named `squares.txt` (and
+create it if it doesn't exist) instead of writing to a file called
+`squares.txt`:
+
+```markdown
 <!-- target: squares.txt -->
-````
+```
 
 You can manually specify a target block using `:EvalBlock {target}`. With
 `[!]`, `:EvalBlock` will cause the evaluated code block to replace its own
