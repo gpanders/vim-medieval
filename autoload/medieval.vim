@@ -1,5 +1,5 @@
 let s:fences = [{'start': '[`~]\{3,}'}, {'start': '\$\$'}]
-let s:opts = ['name', 'target', 'require']
+let s:opts = ['name', 'target', 'require', 'tangle']
 let s:optspat = '\(' . join(s:opts, '\|') . '\):\s*\([0-9A-Za-z_+.$#&/-]\+\)'
 
 function! s:error(msg) abort
@@ -154,13 +154,15 @@ function! s:require(name) abort
 endfunction
 
 function! s:callback(context, output) abort
-    call delete(a:context.tempfile)
+    let opts = a:context.opts
+    if !has_key(opts, 'tangle')
+        call delete(a:context.fname)
+    endif
 
     if empty(a:output)
         return
     endif
 
-    let opts = a:context.opts
     let start = a:context.start
     let end = a:context.end
 
@@ -254,14 +256,20 @@ function! medieval#eval(bang, ...) abort
         return s:error('Command not found: ' . lang)
     endif
 
-    let tmp = tempname()
+    if has_key(opts, 'tangle')
+        let fname = expand(opts.tangle)
+        echo 'Tangled source code written to ' . fname
+    else
+        let fname = tempname()
+    endif
+
     let block = getline(start + 1, end - 1)
     if has_key(opts, 'require')
         let block = s:require(opts.require) + block
     endif
-    call writefile(block, tmp)
+    call writefile(block, fname)
 
-    let context = {'opts': opts, 'start': start, 'end': end, 'tempfile': tmp}
-    call s:jobstart([lang, tmp], function('s:callback', [context]))
+    let context = {'opts': opts, 'start': start, 'end': end, 'fname': fname}
+    call s:jobstart([lang, fname], function('s:callback', [context]))
     call winrestview(view)
 endfunction

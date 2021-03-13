@@ -112,12 +112,12 @@ The target block can be either another code block (delimited by "```" or
 							*medieval-labels*
 
 The block labels must be of the form "<!-- {option}: {value}[,] [{option}:
-{value}[,] [...]]" where {option} is one of "name", "target", or "require".
-The label can be preceeded by whitespace, but no other characters. The option
-values can be composed of the following characters: "0-9A-Za-z_+.$#&-". Note
-that the closing tag of the HTML comment is not required. This allows you to
-embed the code block within an HTML block comment so that the block will not
-be rendered in the final output. For example:
+{value}[,] [...]]" where {option} is one of "name", "target", "require", or
+"tangle". The label can be preceeded by whitespace, but no other characters.
+The option values can be composed of the following characters:
+"0-9A-Za-z_+.$#&/-". Note that the closing tag of the HTML comment is not
+required. This allows you to embed the code block within an HTML block comment
+so that the block will not be rendered in the final output. For example:
 >
 	<!-- target: example
 	```sh
@@ -194,6 +194,42 @@ Running |:EvalBlock| in the second code block produces:
 	```
 	Hi, my name is Gregory Anders
 	```
+<
+
+							*medieval-tangle*
+The source code in a code block can be written to a given file before
+executing by using the "tangle" option. This can be used in conjunction with
+the "require" keyword to combine multiple blocks together into a single
+combined source file.
+
+Example:
+>
+	<!-- name: numpy -->
+	```python
+	import numpy as np
+	```
+
+	<!-- require: numpy tangle: script.py -->
+	```python
+	x = np.arange(5)
+	print(x)
+	```
+<
+When you run |:EvalBlock| on the second code block above, a new file called
+"script.py" will be generated in your current working directory with the
+contents
+>
+	import numpy as np
+	x = np.arange(5)
+	print(x)
+<
+The file specified as the "tangle" option can be a relative or absolute path
+and may use tilde expansion and environment variables.
+
+If you only wish to use the tangling feature without printing the output
+of the code block, you can use `/dev/null` as the block target:
+>
+	<!-- target: /dev/null tangle: script.py -->
 <
 
 							*g:medieval_langs*
