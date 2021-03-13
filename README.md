@@ -57,6 +57,24 @@ If you run `:EvalBlock` in the first code block, the second block will become
 ```
 ````
 
+The target of a block can also be a file. File output must be specfied using
+absolute paths. This is necessary to avoid ambiguity with names of other code
+blocks. File paths can contain environment variables and tilde expansion.
+Example:
+
+````markdown
+<!-- target: $HOME/squares.txt -->
+```python
+print([x*x for x in range(5)])
+```
+````
+
+Note that the following would not work, as it is not possible to distinguish
+between a file named 'squares.txt' and a block named 'squares.txt':
+````markdown
+<!-- target: squares.txt -->
+````
+
 You can manually specify a target block using `:EvalBlock {target}`. With
 `[!]`, `:EvalBlock` will cause the evaluated code block to replace its own
 contents with the result of its evaluation:

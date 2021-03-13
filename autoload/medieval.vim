@@ -1,6 +1,6 @@
 let s:fences = [{'start': '[`~]\{3,}'}, {'start': '\$\$'}]
 let s:opts = ['name', 'target', 'require']
-let s:optspat = '\(' . join(s:opts, '\|') . '\):\s*\([0-9A-Za-z_+.$#&-]\+\)'
+let s:optspat = '\(' . join(s:opts, '\|') . '\):\s*\([0-9A-Za-z_+.$#&/-]\+\)'
 
 function! s:error(msg) abort
     if empty(a:msg)
@@ -170,6 +170,10 @@ function! s:callback(context, output) abort
             call append(start, a:output)
         elseif opts.target =~# '^@'
             call setreg(opts.target[1], a:output)
+        elseif expand(opts.target) =~# '^/'
+            let f = expand(opts.target)
+            call writefile(a:output, f)
+            echo 'Output written to ' . f
         else
             let [tstart, tend] = s:findblock(opts.target)
             if !tstart
