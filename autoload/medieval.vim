@@ -50,23 +50,22 @@ function! s:findblock(name) abort
     call cursor(1, 1)
 
     while 1
-        if !search('^\s*<!--\s*' . s:optspat, 'cW')
+        let start = search('^\s*<!--\s*' . s:optspat, 'cW')
+        if !start || start == line('$')
             call cursor(curpos)
             return [0, 0]
         endif
 
-        if getline('.') =~# '\<name:\s*' . a:name
-            let start = line('.')
-            if getline(start + 1) =~# '^\s*\%(' . fencepat . '\)'
+        " Move the cursor so that we don't match on the current line again
+        call cursor(start + 1, 1)
+
+        if getline(start) =~# '\<name:\s*' . a:name
+            if getline('.') =~# '^\s*\%(' . fencepat . '\)'
                 break
             endif
         endif
-
-        " Move the cursor so that we don't match on the current line again
-        call cursor(line('.') + 1, 1)
     endwhile
 
-    call cursor(start + 1, 1)
     let tstart = matchlist(getline('.'), '^\s*\(' . fencepat . '\)')
 
     let endpat = ''

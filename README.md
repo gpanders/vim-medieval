@@ -161,9 +161,9 @@ ls -1
 $ ls -1
 LICENSE
 README.md
-after
 autoload
 doc
+ftplugin
 ```
 ````
 
@@ -337,8 +337,8 @@ section.
 
 ## Contributing
 
-Please feel free to contribute changes or bug fixes! You can [send patches][]
-to <git@gpanders.com> or submit a pull request on [Github][].
+Please feel free to contribute changes or bug fixes. You can [send patches][]
+to <git@gpanders.com> or submit a pull request on [GitHub][].
 
 [send patches]: https://git-send-email.io/
 [Github]: https://github.com/gpanders/vim-medieval
