@@ -141,12 +141,12 @@ $$
 ````
 
 The block labels must be of the form `<!-- OPTION: VALUE[,] [OPTION: VALUE[,]
-[...]]` where `OPTION` is one of `name`, `target`, or `require`. The label can
-be preceeded by whitespace, but no other characters. The option values can be
-composed of the following characters: `0-9A-Za-z_+.$#&-`. Note that the closing
-tag of the HTML comment is not required. This allows you to embed the code
-block within an HTML block comment so that the block will not be rendered in
-the final output. For example:
+[...]]` where `OPTION` is one of `name`, `target`, `require`, or `tangle`. The
+label can be preceeded by whitespace, but no other characters. The option
+values can be composed of the following characters: `0-9A-Za-z_+.$#&-`. Note
+that the closing tag of the HTML comment is not required. This allows you to
+embed the code block within an HTML block comment so that the block will not be
+rendered in the final output. For example:
 
 ````markdown
 <!-- target: example
