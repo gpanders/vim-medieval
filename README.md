@@ -58,10 +58,9 @@ If you run `:EvalBlock` in the first code block, the second block will become
 ```
 ````
 
-The target of a block can also be a file. File output must be specfied using
-absolute paths. This is necessary to avoid ambiguity with names of other code
-blocks. File paths can contain environment variables and tilde expansion.
-Example:
+The target of a block can also be a file. If the target name contains a `/`
+character, it is assumed to be a file path. File paths can contain environment
+variables and tilde expansion. Example:
 
 ````markdown
 <!-- target: $HOME/squares.txt -->
@@ -76,6 +75,12 @@ create it if it doesn't exist) instead of writing to a file called
 
 ```markdown
 <!-- target: squares.txt -->
+```
+
+To write to a file called `squares.txt`, use
+
+```markdown
+<!-- target: ./squares.txt -->
 ```
 
 You can manually specify a target block using `:EvalBlock {target}`. With

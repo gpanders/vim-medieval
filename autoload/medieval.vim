@@ -171,8 +171,8 @@ function! s:callback(context, output) abort
             call append(start, a:output)
         elseif opts.target =~# '^@'
             call setreg(opts.target[1], a:output)
-        elseif expand(opts.target) =~# '^/'
-            let f = expand(opts.target)
+        elseif expand(opts.target) =~# '/'
+            let f = fnamemodify(expand(opts.target), ':p')
             call writefile(a:output, f)
             echo 'Output written to ' . f
         else
