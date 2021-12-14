@@ -229,7 +229,7 @@ function! medieval#eval(bang, ...) abort
         return s:error('Closing fence not found')
     endif
 
-    let langidx = index(map(copy(g:medieval_langs), 'split(v:val, "=")[0]'), lang)
+    let langidx = index(map(copy(g:medieval_langs), 'split(v:val, "=", 1)[0]'), lang)
     if langidx < 0
         call winrestview(view)
         echo '''' . lang . ''' not found in g:medieval_langs'
