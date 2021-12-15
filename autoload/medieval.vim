@@ -2,6 +2,9 @@ let s:fences = [{'start': '[`~]\{3,}'}, {'start': '\$\$'}]
 let s:opts = ['name', 'target', 'require', 'tangle']
 let s:optspat = '\(' . join(s:opts, '\|') . '\):\s*\([0-9A-Za-z_+.$#&/-]\+\)'
 
+highlight default link MedievalCodeBlockRunning Underlined
+sign define codeblockrunning linehl=MedievalCodeBlockRunning
+
 function! s:error(msg) abort
     if empty(a:msg)
         return
@@ -153,6 +156,7 @@ function! s:require(name) abort
 endfunction
 
 function! s:callback(context, output) abort
+    call sign_unplacelist(a:context.signs)
     let opts = a:context.opts
     if !has_key(opts, 'tangle')
         call delete(a:context.fname)
@@ -268,7 +272,19 @@ function! medieval#eval(bang, ...) abort
     endif
     call writefile(block, fname)
 
-    let context = {'opts': opts, 'start': start, 'end': end, 'fname': fname}
+    setlocal signcolumn=no
+    let signs = range(start + 1, end - 1)->map("{
+      \'group': 'medieval',
+      \'name': 'codeblockrunning',
+      \'buffer': bufnr(),
+      \'lnum': v:val
+    \}")->sign_placelist()->map("{
+      \'group': 'medieval',
+      \'buffer': bufnr(),
+      \'id': v:val
+    \}")
+
+    let context = {'opts': opts, 'start': start, 'end': end, 'fname': fname, 'signs': signs}
     call s:jobstart([lang, fname], function('s:callback', [context]))
     call winrestview(view)
 endfunction
