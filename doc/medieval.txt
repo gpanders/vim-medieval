@@ -1,6 +1,6 @@
 *medieval.txt*  Evaluate Markdown code blocks in Vim
 
-Author:  Greg Anders <greg@gpanders.com>
+Author:  Gregory Anders <greg@gpanders.com>
 Repo:    https://github.com/gpanders/vim-medieval
 License: Same terms as Vim itself (see |license|)
 
@@ -232,6 +232,33 @@ of the code block, you can use `/dev/null` as the block target:
 	<!-- target: /dev/null tangle: script.py -->
 <
 
+							*medieval#eval()*
+medieval#eval({target}[, {opts})
+		Evaluate the block under the cursor. To replace the contents of
+		the block (like |:EvalBlock!|) use "self" for {target}.
+
+		{opts} is an optional |Dict| accepting the following keys:
+		  callback:	(function) A function to be called when
+		  		evaluation completes, before the output is
+				written to the target block. The function is
+				passed two arguments: a "context" |Dict|
+				containing the parameters used in the
+				evaluation and the result of the block
+				evaluation as a list of lines. Modifications to
+				the output list will effect what is written to
+				the target block.
+
+		Example: >
+
+			function! s:cb(ctx, output)
+			    let elapsed = reltimestr(reltime(s:start))
+			    unlet! s:start
+			    call add(a:output, 'Evaluation finished in ' . elapsed . 's')
+			endfunction
+
+			let s:start = reltime()
+			call medieval#eval('', #{callback: function('s:cb')})
+<
 							*g:medieval_langs*
 Medieval will only attempt to execute code blocks in languages explicitly
 listed in the variable |g:medieval_langs|. The structure of this variable is a
