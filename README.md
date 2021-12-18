@@ -54,7 +54,7 @@ yourself by adding the following to the file
 `~/.vim/after/ftplugin/markdown.vim` (create it if it does not yet exist):
 
 ```vim
-nnoremap <buffer> Z! :<C-U>EvalBlock<CR>
+nmap <buffer> Z! <Plug>(medieval-eval)
 ```
 
 ## Limitations
