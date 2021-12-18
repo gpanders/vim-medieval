@@ -162,6 +162,10 @@ function! s:callback(context, output) abort
         return
     endif
 
+    if has_key(opts, 'callback')
+        call opts.callback(a:context, a:output)
+    endif
+
     let start = a:context.start
     let end = a:context.end
 
@@ -207,7 +211,7 @@ function! s:callback(context, output) abort
     endif
 endfunction
 
-function! medieval#eval(bang, ...) abort
+function! medieval#eval(...) abort
     if !exists('g:medieval_langs')
         call s:error('g:medieval_langs is unset')
         return
@@ -238,9 +242,7 @@ function! medieval#eval(bang, ...) abort
 
     let opts = s:parseopts(start - 1)
 
-    if a:bang
-        let opts.target = 'self'
-    elseif a:0
+    if a:0 && a:1 !=# ''
         let opts.target = a:1
     elseif s:validreg(v:register)
         let opts.target = '@' . v:register
@@ -267,6 +269,10 @@ function! medieval#eval(bang, ...) abort
         let block = s:require(opts.require) + block
     endif
     call writefile(block, fname)
+
+    if a:0 > 1
+        call extend(opts, a:2, 'error')
+    endif
 
     let context = {'opts': opts, 'start': start, 'end': end, 'fname': fname}
     call s:jobstart([lang, fname], function('s:callback', [context]))
