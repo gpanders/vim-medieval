@@ -275,7 +275,7 @@ function! medieval#eval(...) abort
         let block = s:require(opts.require) + block
     endif
     if has_key(opts, 'setup')
-        let block = opts.setup(context, block)
+        call opts.setup(context, block)
     endif
     call writefile(block, fname)
 
