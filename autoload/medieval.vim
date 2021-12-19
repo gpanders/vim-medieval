@@ -162,8 +162,8 @@ function! s:callback(context, output) abort
         return
     endif
 
-    if has_key(opts, 'callback')
-        call opts.callback(a:context, a:output)
+    if has_key(opts, 'complete')
+        call opts.complete(a:context, a:output)
     endif
 
     let start = a:context.start
@@ -264,17 +264,21 @@ function! medieval#eval(...) abort
         let fname = tempname()
     endif
 
-    let block = getline(start + 1, end - 1)
-    if has_key(opts, 'require')
-        let block = s:require(opts.require) + block
-    endif
-    call writefile(block, fname)
-
     if a:0 > 1
         call extend(opts, a:2, 'error')
     endif
 
     let context = {'opts': opts, 'start': start, 'end': end, 'fname': fname}
+
+    let block = getline(start + 1, end - 1)
+    if has_key(opts, 'require')
+        let block = s:require(opts.require) + block
+    endif
+    if has_key(opts, 'setup')
+        let block = opts.setup(context, block)
+    endif
+    call writefile(block, fname)
+
     call s:jobstart([lang, fname], function('s:callback', [context]))
     call winrestview(view)
 endfunction
