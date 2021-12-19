@@ -20,6 +20,7 @@ By placing your cursor anywhere in the code block above and running
 You can also redirect the output of the evaluation into a register using
 |:EvalBlock| @{0-9a-z".=*+}.
 
+							*medieval-target*
 You can also send the output of evaluation into another code block, allowing
 you to do a primitive style of literate programming. You can accomplish this
 by adding a "target" parameter to your code block and creating a second code
@@ -235,29 +236,45 @@ of the code block, you can use `/dev/null` as the block target:
 							*medieval#eval()*
 medieval#eval({target}[, {opts})
 		Evaluate the block under the cursor. To replace the contents of
-		the block (like |:EvalBlock!|) use "self" for {target}.
+		the block (like |:EvalBlock!|) use "self" for {target}. If
+		{target} is |v:null| or an empty string then it uses the
+		"target" field from the block header |medieval-target| if it
+		exists; otherwise, output is written to the |preview-window|.
 
 		{opts} is an optional |Dict| accepting the following keys:
-		  callback:	(function) A function to be called when
-		  		evaluation completes, before the output is
-				written to the target block. The function is
-				passed two arguments: a "context" |Dict|
-				containing the parameters used in the
-				evaluation and the result of the block
-				evaluation as a list of lines. Modifications to
-				the output list will effect what is written to
-				the target block.
+		  setup:	(function) A function to be called just before
+				evaluating the code block. The function
+				accepts two arguments: a "context" |Dict|
+				containing the parameters used to evaluate the
+				block (such as the start and end line number
+				of the block) and the text withing the block
+				as a list of lines. Modifications to the block
+				text will affect what is evaluated.
+		  complete:	(function) A function to be called when
+				evaluation completes, before the output is
+				written to the target block. The function
+				accepts two arguments: a "context" |Dict|
+				containing the parameters used to evaluate the
+				block and the result of the block evaluation
+				as a list of lines. Modifications to the
+				output list will affect what is written to the
+				target block.
 
 		Example: >
 
-			function! s:cb(ctx, output)
+			function! s:complete(ctx, output)
 			    let elapsed = reltimestr(reltime(s:start))
 			    unlet! s:start
 			    call add(a:output, 'Evaluation finished in ' . elapsed . 's')
 			endfunction
 
-			let s:start = reltime()
-			call medieval#eval('', #{callback: function('s:cb')})
+			function! s:setup(ctx, input)
+			    let s:start = reltime()
+			endfunction
+
+			call medieval#eval('',
+				\ #{setup: function('s:setup'),
+				\   complete: function('s:complete')})
 <
 							*g:medieval_langs*
 Medieval will only attempt to execute code blocks in languages explicitly
