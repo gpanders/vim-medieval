@@ -263,13 +263,12 @@ medieval#eval({target}[, {opts})
 		Example: >
 
 			function! s:complete(ctx, output)
-			    let elapsed = reltimestr(reltime(s:start))
-			    unlet! s:start
+			    let elapsed = reltimestr(reltime(a:ctx.start_time))
 			    call add(a:output, 'Evaluation finished in ' . elapsed . 's')
 			endfunction
 
 			function! s:setup(ctx, input)
-			    let s:start = reltime()
+			    let a:ctx.start_time = reltime()
 			endfunction
 
 			call medieval#eval('',
