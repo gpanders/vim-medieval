@@ -93,13 +93,21 @@ function! s:createblock(start, name, fence) abort
     call append(a:start, ['', '<!-- name: ' . a:name . ' -->', a:fence, a:fence])
 endfunction
 
+function! s:extend(list, val)
+    let data = a:val
+    if data[-1] == ''
+        let data = data[:-2]
+    end
+    return extend(a:list, data)
+endfunction
+
 " Wrapper around job start functions for both neovim and vim
 function! s:jobstart(cmd, cb) abort
     let output = []
     if exists('*jobstart')
         call jobstart(a:cmd, {
-                    \ 'on_stdout': {_, data, ... -> extend(output, data[:-2])},
-                    \ 'on_stderr': {_, data, ... -> extend(output, data[:-2])},
+                    \ 'on_stdout': {_, data, ... -> s:extend(output, data)},
+                    \ 'on_stderr': {_, data, ... -> s:extend(output, data)},
                     \ 'on_exit': {... -> a:cb(output)},
                     \ 'stdout_buffered': 1,
                     \ 'stderr_buffered': 1,
