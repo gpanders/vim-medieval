@@ -217,6 +217,10 @@ function! s:callback(context, output) abort
         setlocal buftype=nofile bufhidden=delete nobuflisted noswapfile winfixheight
         wincmd p
     endif
+
+    if has_key(opts, 'after')
+        call opts.after(a:context, a:output)
+    endif
 endfunction
 
 function! medieval#eval(...) abort
