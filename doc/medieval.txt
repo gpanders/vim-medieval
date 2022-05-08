@@ -259,6 +259,13 @@ medieval#eval({target}[, {opts})
 				as a list of lines. Modifications to the
 				output list will affect what is written to the
 				target block.
+		  after:	(function) A function to be called when
+				evaluation completes, but after the output is
+				written to the target block. The function
+				accepts two arguments: a "context" |Dict|
+				containing the parameters used to evaluate the
+				block and the result of the block evaluation
+				as a list of lines.
 
 		Example: >
 
@@ -271,9 +278,14 @@ medieval#eval({target}[, {opts})
 			    let a:ctx.start_time = reltime()
 			endfunction
 
+			function! s:after(ctx, input)
+			    echo "Target has been updated."
+			endfunction
+
 			call medieval#eval('',
 				\ #{setup: function('s:setup'),
-				\   complete: function('s:complete')})
+				\   complete: function('s:complete'),
+				\   after: function('s:after')})
 <
 							*g:medieval_langs*
 Medieval will only attempt to execute code blocks in languages explicitly
