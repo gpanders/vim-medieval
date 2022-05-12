@@ -42,7 +42,6 @@ If you run |:EvalBlock| in the first code block, the second block will become
 	```
 	[0, 1, 4, 9, 16]
 	```
-
 <
 The target of a block can also be a file. If the target name contains a "/"
 character, it is assumed to be a file path. File paths can contain environment
@@ -223,15 +222,14 @@ contents
 	x = np.arange(5)
 	print(x)
 <
-The file specified as the "tangle" option can be a relative or absolute path
-and may use tilde expansion and environment variables.
+Note that the value of the "tangle" option is always interpreted as the name
+of a file, regardless of whether or not it contains a / character.
 
 If you only wish to use the tangling feature without printing the output
 of the code block, you can use `/dev/null` as the block target:
 >
 	<!-- target: /dev/null tangle: script.py -->
 <
-
 							*medieval#eval()*
 medieval#eval({target}[, {opts})
 		Evaluate the block under the cursor. To replace the contents of
