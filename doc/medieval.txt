@@ -170,9 +170,9 @@ Running |:EvalBlock| in the second code block produces:
 	[1 2 3 4]
 	```
 	````
-
-	Blocks can have recursive dependencies:
-
+<
+Blocks can have recursive dependencies:
+>
 	````markdown
 	<!-- name: first_name -->
 	```sh
@@ -188,15 +188,14 @@ Running |:EvalBlock| in the second code block produces:
 	```sh
 	echo "Hi, my name is $full_name"
 	```
-
-	After running :EvalBlock in the block above...
-
+<
+After running :EvalBlock in the block above...
+>
 	<!-- name: greeting -->
 	```
 	Hi, my name is Gregory Anders
 	```
 <
-
 							*medieval-tangle*
 The source code in a code block can be written to a given file before
 executing by using the "tangle" option. This can be used in conjunction with
