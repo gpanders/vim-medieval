@@ -57,8 +57,12 @@ create it if it doesn't exist) instead of writing to a file called
 "squares.txt":
 >
 	<!-- target: squares.txt -->
+
+To write to a file called "squares.txt", use: >
+
+	<!-- target: ./squares.txt -->
 <
-You can also manually specify a target block using |:EvalBlock| {target}. With
+You can manually specify a target block using |:EvalBlock| {target}. With
 [!], |:EvalBlock| will cause the evaluated code block to replace its own
 contents with the result of its evaluation:
 >
@@ -168,11 +172,9 @@ Running |:EvalBlock| in the second code block produces:
 	```
 	[1 2 3 4]
 	```
-	````
 <
 Blocks can have recursive dependencies:
 >
-	````markdown
 	<!-- name: first_name -->
 	```sh
 	first_name="Gregory"
