@@ -231,7 +231,7 @@ function! medieval#eval(...) abort
 
     let view = winsaveview()
     let line = line('.')
-    let startpat = '\v^\s*([`~]{3,})\s*%(\{\s*.?)?(\a+)?'
+    let startpat = '\v^\s*([`~]{3,})\s*%(\{\s*\.?)?(\a+)?'
     let start = search(startpat, 'bcnW')
     if !start
         return
