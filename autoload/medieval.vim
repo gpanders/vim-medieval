@@ -1,4 +1,4 @@
-let s:fences = [{'start': '[`~]\{3,}'}, {'start': '\$\$'}]
+let s:fences = [#{start: '\([`~]\{3,}\)\s*\%({\s*\.\?\)\?\(\a\+\)\?', end: '\1', lang: 2,}, #{start: '\$\$'}]
 let s:opts = ['name', 'target', 'require', 'tangle']
 let s:optspat = '\(' . join(s:opts, '\|') . '\):\s*\([0-9A-Za-z_+.$#&/-]\+\)'
 
@@ -66,18 +66,17 @@ function! s:findblock(name) abort
         endif
     endwhile
 
-    let tstart = matchlist(getline('.'), '^\s*\(' . fencepat . '\)')
-
     let endpat = ''
     for fence in fences
-        if tstart[1] =~# fence.start
+        let matches = matchlist(getline('.'), fence.start)
+        if !empty(matches)
             " If 'end' pattern is not defined, copy the opening
             " delimiter
-            let endpat = get(fence, 'end', tstart[1])
+            let endpat = get(fence, 'end', fence.start)
 
             " Replace any instances of \0, \1, \2, ... with the
             " submatch from the opening delimiter
-            let endpat = substitute(endpat, '\\\(\d\)', '\=tstart[1 + submatch(1)]', 'g')
+            let endpat = substitute(endpat, '\\\(\d\)', '\=matches[submatch(1)]', 'g')
             break
         endif
     endfor
@@ -90,7 +89,7 @@ function! s:findblock(name) abort
 endfunction
 
 function! s:createblock(start, name, fence) abort
-    call append(a:start, ['', '<!-- name: ' . a:name . ' -->', a:fence, a:fence])
+    call append(a:start, ['', '<!-- name: ' . a:name . ' -->', a:fence.start, a:fence.end])
 endfunction
 
 function! s:extend(list, val)
@@ -190,8 +189,7 @@ function! s:callback(context, output) abort
         else
             let [tstart, tend] = s:findblock(opts.target)
             if !tstart
-                let fence = getline(end)
-                call s:createblock(end, opts.target, fence)
+                call s:createblock(end, opts.target, #{start: getline(start), end: getline(end)})
                 let tstart = end + 2
                 let tend = tstart + 1
             endif
@@ -231,15 +229,38 @@ function! medieval#eval(...) abort
 
     let view = winsaveview()
     let line = line('.')
-    let startpat = '\v^\s*([`~]{3,})\s*%(\{\s*\.?)?(\a+)?'
-    let start = search(startpat, 'bcnW')
+    let fences = filter(extend(s:fences, get(g:, 'medieval_fences', [])), 'has_key(v:val, "lang")')
+    let fencepat = s:fencepat(fences)
+    let start = search(fencepat, 'bcnW')
     if !start
         return
     endif
 
     call cursor(start, 1)
-    let [fence, lang] = matchlist(getline(start), startpat)[1:2]
-    let end = search('\V\^\s\*' . fence . '\s\*\$', 'nW')
+
+    let lang = ''
+    let endpat = ''
+    for fence in fences
+        let matches = matchlist(getline(start), fence.start)
+        if !empty(matches)
+            let lang = matches[fence.lang]
+            let endpat = get(fence, 'end', fence.start)
+            let endpat = substitute(endpat, '\\\(\d\)', '\=matches[submatch(1)]', 'g')
+            break
+        endif
+    endfor
+
+    if empty(lang)
+        call winrestview(view)
+        return s:error('Could not determine language for block')
+    endif
+
+    if empty(endpat)
+        call winrestview(view)
+        return s:error('No end pattern')
+    endif
+
+    let end = search('^\s*' . endpat . '\s*$', 'nW')
     if end < line
         call winrestview(view)
         return s:error('Closing fence not found')
