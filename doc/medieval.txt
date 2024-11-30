@@ -115,10 +115,10 @@ The target block can be either another code block (delimited by "```" or
 <
 							*medieval-labels*
 
-The block labels must be of the form "<!-- {option}: {value}[,] [{option}:
-{value}[,] [...]]" where {option} is one of "name", "target", "require", or
-"tangle". The label can be preceeded by whitespace, but no other characters.
-The option values can be composed of the following characters:
+By default, the block labels must be of the form "<!-- {option}: {value}[,]
+[{option}: {value}[,] [...]]" where {option} is one of "name", "target",
+"require", or "tangle". The label can be preceeded by whitespace, but no other
+characters. The option values can be composed of the following characters:
 "0-9A-Za-z_+.$#&/-". Note that the closing tag of the HTML comment is not
 required. This allows you to embed the code block within an HTML block comment
 so that the block will not be rendered in the final output. For example:
@@ -142,6 +142,9 @@ so that the block will not be rendered in the final output. For example:
 <
 In this example, only the second block will be rendered, since the first block
 is nested within an HTML comment.
+
+The label pattern can be changed on a per-filetype basis, if needed. See
+|g:medieval_option_pat|.
 
 							*medieval-require*
 
@@ -326,5 +329,27 @@ Note the use of a capture group in the "start" pattern and the use of "\1" in
 the end pattern. The "\1" in the end pattern will be replaced by whatever
 matches the capture group in the "start" pattern ("katex" in our example
 above).
+
+						*g:medieval_option_pat*
+Medieval finds labeled blocks using an "option pattern". The default is
+"^\s*<!--\s*" which matches HTML comments as described in this document. This
+pattern can be overriden on a per-filetype basis by adding entries to the
+|g:medieval_option_pat| variable. Example: >
+
+	let g:medieval_option_pat = {}
+	let g:medieval_option_pat.vimwiki = '^%%\s*'
+<
+						*g:medieval_option_fmt*
+When Medieval creates a new block it will insert an option label
+automatically. By default, the label will be "<!-- name: {name} -->", but this
+can be overridden on a per-filetype basis by setting the
+|g:medieval_option_fmt| variable. This variable is a |Dict| mapping filetype
+to a |printf()| style pattern. Example: >
+
+	let g:medieval_option_fmt = {}
+	let g:medieval_option_fmt.vimwiki = '%%%% %s'
+<
+This example will instead insert "%% name: {name}" for new blocks. Note that
+in the example above, the "%" characters are escaped with a 2nd "%" character.
 
  vim:tw=78:ts=8:noet:ft=help:norl:
