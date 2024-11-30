@@ -1,6 +1,8 @@
 const s:fences = [#{start: '\([`~]\{3,}\)\s*\%({\s*\.\?\)\?\(\a\+\)\?', end: '\1', lang: 2,}, #{start: '\$\$'}]
 let s:opts = ['name', 'target', 'require', 'tangle']
 let s:optspat = '\(' . join(s:opts, '\|') . '\):\s*\([0-9A-Za-z_+.$#&/-]\+\)'
+let s:optionfmt = '<!-- %s -->'
+let s:optionpat = '^\s*<!--\s*'
 
 function! s:error(msg) abort
     if empty(a:msg)
@@ -41,7 +43,7 @@ endfunction
 "     <!-- name: foo -->
 "     ```
 "     ```
-function! s:findblock(name) abort
+function! s:findblock(ft, name) abort
     let fences = s:fences + get(g:, 'medieval_fences', [])
     let fencepat = s:fencepat(fences)
 
@@ -49,8 +51,9 @@ function! s:findblock(name) abort
 
     call cursor(1, 1)
 
+    let pat = get(get(g:, 'medieval_option_pat', {}), a:ft, s:optionpat)
     while 1
-        let start = search('^\s*<!--\s*' . s:optspat, 'cW')
+        let start = search(pat . s:optspat, 'cW')
         if !start || start == line('$')
             call cursor(curpos)
             return [0, 0]
@@ -88,8 +91,10 @@ function! s:findblock(name) abort
     return [start, end]
 endfunction
 
-function! s:createblock(start, name, fence) abort
-    call append(a:start, ['', '<!-- name: ' . a:name . ' -->', a:fence.start, a:fence.end])
+function! s:createblock(ft, start, name, fence) abort
+    let opt = printf('name: %s', a:name)
+    let marker = printf(get(get(g:, 'medieval_option_fmt', {}), a:ft, s:optionfmt), opt)
+    call append(a:start, ['', marker, a:fence.start, a:fence.end])
 endfunction
 
 function! s:extend(list, val)
@@ -125,10 +130,11 @@ function! s:jobstart(cmd, cb) abort
 endfunction
 
 " Parse an options string on the given line number
-function! s:parseopts(lnum) abort
+function! s:parseopts(ft, lnum) abort
     let opts = {}
     let line = getline(a:lnum)
-    if line =~# '^\s*<!--\s*' . s:optspat
+    let pat = get(get(g:, 'medieval_option_pat', {}), a:ft, s:optionpat)
+    if line =~# pat . s:optspat
         let cnt = 0
         while 1
             let matches = matchlist(line, s:optspat, 0, cnt)
@@ -143,17 +149,17 @@ function! s:parseopts(lnum) abort
     return opts
 endfunction
 
-function! s:require(name) abort
-    let [start, end] = s:findblock(a:name)
+function! s:require(ft, name) abort
+    let [start, end] = s:findblock(a:ft, a:name)
     if !end
         return []
     endif
 
     let block = getline(start + 2, end - 1)
 
-    let opts = s:parseopts(start)
+    let opts = s:parseopts(a:ft, start)
     if has_key(opts, 'require')
-        return s:require(opts.require) + block
+        return s:require(a:ft, opts.require) + block
     endif
 
     return block
@@ -187,9 +193,9 @@ function! s:callback(context, output) abort
             call writefile(a:output, f)
             echo 'Output written to ' . f
         else
-            let [tstart, tend] = s:findblock(opts.target)
+            let [tstart, tend] = s:findblock(a:context.filetype, opts.target)
             if !tstart
-                call s:createblock(end, opts.target, #{start: getline(start), end: getline(end)})
+                call s:createblock(a:context.filetype, end, opts.target, #{start: getline(start), end: getline(end)})
                 let tstart = end + 2
                 let tend = tstart + 1
             endif
@@ -273,7 +279,7 @@ function! medieval#eval(...) abort
         return
     endif
 
-    let opts = s:parseopts(start - 1)
+    let opts = s:parseopts(&filetype, start - 1)
 
     if a:0 && a:1 !=# ''
         let opts.target = a:1
@@ -301,11 +307,11 @@ function! medieval#eval(...) abort
         call extend(opts, a:2, 'error')
     endif
 
-    let context = {'opts': opts, 'start': start, 'end': end, 'fname': fname}
+    let context = {'opts': opts, 'start': start, 'end': end, 'fname': fname, 'filetype': &filetype}
 
     let block = getline(start + 1, end - 1)
     if has_key(opts, 'require')
-        let block = s:require(opts.require) + block
+        let block = s:require(&filetype, opts.require) + block
     endif
     if has_key(opts, 'setup')
         call opts.setup(context, block)
