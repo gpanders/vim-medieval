@@ -42,7 +42,7 @@ endfunction
 "     ```
 "     ```
 function! s:findblock(name) abort
-    let fences = extend(s:fences, get(g:, 'medieval_fences', []))
+    let fences = s:fences + get(g:, 'medieval_fences', [])
     let fencepat = s:fencepat(fences)
 
     let curpos = getcurpos()[1:]
