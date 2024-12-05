@@ -235,7 +235,7 @@ function! medieval#eval(...) abort
 
     let view = winsaveview()
     let line = line('.')
-    let fences = filter(extend(s:fences, get(g:, 'medieval_fences', [])), 'has_key(v:val, "lang")')
+    let fences = filter((s:fences + get(g:, 'medieval_fences', [])), 'has_key(v:val, "lang")')
     let fencepat = s:fencepat(fences)
     let start = search(fencepat, 'bcnW')
     if !start
