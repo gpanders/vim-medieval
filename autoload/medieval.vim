@@ -301,6 +301,9 @@ function! medieval#eval(...) abort
         echo 'Tangled source code written to ' . fname
     else
         let fname = tempname()
+        if lang == "cmd"
+            let fname .= ".bat"
+        endif
     endif
 
     if a:0 > 1
@@ -317,7 +320,10 @@ function! medieval#eval(...) abort
         call opts.setup(context, block)
     endif
     call writefile(block, fname)
-
-    call s:jobstart([lang, fname], function('s:callback', [context]))
+    if lang == "cmd"
+        call s:jobstart([fname], function('s:callback', [context]))
+    else
+        call s:jobstart([lang, fname], function('s:callback', [context]))
+    endif
     call winrestview(view)
 endfunction
