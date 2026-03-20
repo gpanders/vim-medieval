@@ -55,6 +55,23 @@ If you run |:EvalBlock| in the first code block, the second block will become
 	[0, 1, 4, 9, 16]
 	```
 <
+If the named target block already exists, Medieval leaves its fence unchanged
+and only replaces the contents.
+
+That makes it useful when a code block produces Markdown. For example, you can
+create the target block as a `markdown` fence yourself and let Medieval keep
+that fence on subsequent runs:
+>
+	<!-- target: rendered -->
+	```bash
+	printf '# Title\n\nThis is rendered markdown.\n'
+	```
+
+	<!-- name: rendered -->
+	```markdown
+	```
+<
+
 The target of a block can also be a file. If the target name contains a "/"
 character, it is assumed to be a file path. File paths can contain environment
 variables and tilde expansion. Example:
@@ -247,6 +264,7 @@ of the code block, you can use `/dev/null` as the block target:
 >
 	<!-- target: /dev/null tangle: script.py -->
 <
+
 							*medieval#eval()*
 medieval#eval({target}[, {opts})
 		Evaluate the block under the cursor. To replace the contents of

@@ -35,6 +35,28 @@ Execute (Eval source block with named target):
 Then (Output written to named target block):
   AssertEqual 'computed', getline(8)
 
+" === Existing named target keeps its fence ===
+
+Given markdown (Existing target block is not recreated):
+  <!-- target: existing -->
+  ```sh
+  echo 'updated'
+  ```
+
+  <!-- name: existing -->
+  ```text
+  old output
+  ```
+
+Execute (Eval source block writes into existing target):
+  3
+  EvalBlock
+
+Then (Fence stays unchanged and contents are replaced):
+  AssertEqual '```text', getline(7)
+  AssertEqual 'updated', getline(8)
+  AssertEqual '```', getline(9)
+
 " === EvalBlock from destination block redirects to source ===
 
 Given markdown (EvalBlock in destination block evaluates its source):
