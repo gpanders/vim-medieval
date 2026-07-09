@@ -1,5 +1,5 @@
 const s:fences = [#{start: '\([`~]\{3,}\)\s*\%({\s*\.\?\)\?\(\a\+\)\?', end: '\1', lang: 2,}, #{start: '\$\$'}]
-let s:opts = ['name', 'target', 'require', 'tangle']
+let s:opts = ['name', 'target', 'require', 'tangle', 'session']
 let s:optspat = '\(' . join(s:opts, '\|') . '\):\s*\([0-9A-Za-z_+.$#&/-]\+\)'
 let s:optionfmt = '<!-- %s -->'
 let s:optionpat = '^\s*<!--\s*'
@@ -265,6 +265,150 @@ function! medieval#evalrange(line1, line2, target) abort
     call winrestview(view)
 endfunction
 
+function! s:session_read(key, lines) abort
+    if !has_key(s:active_sessions, a:key)
+        return
+    endif
+
+    let session = s:active_sessions[a:key]
+
+    if type(a:lines) == v:t_list
+        let data = a:lines
+        if !empty(data) && data[-1] ==# ''
+            let data = data[:-2]
+            let session.buffer += data
+        endif
+    else
+        let session.buffer += [a:lines]
+    endif
+
+
+    if !empty(session.token) && match(session.buffer, session.token) >= 0
+        let output = session.buffer
+        let token = session.token
+        let context = session.context
+
+        let session.token = ''
+        let session.context = {}
+
+        let token_idx = match(output, token)
+        if token_idx > 0
+            let output = output[:token_idx - 1]
+        elseif token_idx == 0
+            let output = []
+        endif
+
+        call context.cb(output)
+    endif
+endfunction
+
+function! s:vim_cb(channel, msg) abort
+    for [k, s] in items(s:active_sessions)
+        if s.id == a:channel
+            call s:session_read(k, a:msg)
+            break
+        endif
+    endfor
+endfunction
+
+function! s:nvim_cb(job_id, data, event) abort
+    for [k, s] in items(s:active_sessions)
+        if s.id == a:job_id
+            call s:session_read(k, a:data)
+            break
+        endif
+    endfor
+endfunction
+
+function! s:nvim_session_exit_cb(job_id, exit_code, event) abort
+    for [k, s] in items(s:active_sessions)
+        if s.id == a:job_id
+            call remove(s:active_sessions, k)
+            break
+        endif
+    endfor
+endfunction
+
+function! s:eval_session(lang, session_name, block, cb) abort
+    if !exists('s:active_sessions')
+        let s:active_sessions = {}
+    endif
+
+    if !exists('s:session_buffers')
+        let s:session_buffers = {}
+    endif
+
+    let key = a:lang . ':' . a:session_name
+    let eof_token = '__MEDIEVAL_SESSION_EOF__' . reltimestr(reltime())
+    let running = has_key(s:active_sessions, key)
+
+    if running
+        let session = s:active_sessions[key]
+        if !has('nvim')
+            let running = job_status(session.job) ==# 'run'
+        endif
+    endif
+
+    if !running
+        let cmd = [a:lang]
+        if a:lang ==# 'python' || a:lang ==# 'python3'
+            let cmd += ['-i', '-q']
+        endif
+
+        if has('nvim')
+            let id = jobstart(cmd, {
+                        \ 'on_stdout': function('s:nvim_cb'),
+                        \ 'on_stderr': function('s:nvim_cb'),
+                        \ 'on_exit': function('s:nvim_session_exit_cb'),
+                        \ 'stdout_buffered': 0,
+                        \ 'stderr_buffered': 0,
+                        \ })
+            if id <= 0
+                return s:error('Failed to start job for ' . a:lang)
+            endif
+            let s:active_sessions[key] = {
+                        \ 'id': id,
+                        \ 'buffer': [],
+                        \ 'token': '',
+                        \ 'context': {},
+                        \ }
+        else
+            let job = job_start(l:cmd, {
+                        \ 'out_cb': function('s:vim_cb'),
+                        \ 'err_cb': function('s:vim_cb'),
+                        \ 'mode': 'nl',
+                        \ })
+            let s:active_sessions[key] = {
+                        \ 'id': job_getchannel(job),
+                        \ 'job': job,
+                        \ 'buffer': [],
+                        \ 'token': '',
+                        \ 'context': {},
+                        \ }
+        endif
+    endif
+
+    let session = s:active_sessions[key]
+    let session.buffer = []
+    let session.token = eof_token
+    let session.context = {'cb': a:cb}
+
+    let new_block = copy(a:block)
+    if a:lang =~# 'python'
+        let new_block += ['print("' . eof_token . '")']
+    else
+        let new_block += ['echo "' . eof_token . '"']
+    endif
+
+    if has('nvim')
+        call chansend(session.id, new_block + [''])
+    else
+        for line in new_block
+            call ch_sendraw(session.id, line . "\n")
+        endfor
+    endif
+endfunction
+
 function! medieval#eval(...) abort
     if !exists('g:medieval_langs')
         call s:error('g:medieval_langs is unset')
@@ -378,11 +522,16 @@ function! medieval#eval(...) abort
     if has_key(opts, 'setup')
         call opts.setup(context, block)
     endif
-    call writefile(block, fname)
-    if lang == "cmd"
-        call s:jobstart([fname], function('s:callback', [context]))
+
+    if has_key(opts, 'session')
+        call s:eval_session(lang, opts.session, block, function('s:callback', [context]))
     else
-        call s:jobstart([lang, fname], function('s:callback', [context]))
+        call writefile(block, fname)
+        if lang == "cmd"
+            call s:jobstart([fname], function('s:callback', [context]))
+        else
+            call s:jobstart([lang, fname], function('s:callback', [context]))
+        endif
     endif
     call winrestview(view)
 endfunction
